@@ -6,56 +6,12 @@ class Product:
     def __init__(self,name, description ,quantity, price):
         Product.product_id += 1
         self.id = Product.product_id
-        self._name = name
-        self._description = description
-        self._quantity = quantity
-        self._price = price
-        self.first_added = datetime.now()
-        self.last_updated = datetime.now()
-    
-    @property
-    def name(self):
-        return self._name
-    
-    @name.setter
-    def name(self,val):
-        if len(val)<2:
-            print("Name length too short")
-            return
-        self.name = val
-    
-    @property
-    def description(self):
-        return self._description
-    
-    @description.setter
-    def description(self, val):
-        if len(val)<3:
-            print("Description length too short")
-            return
-        self._description = val
-    
-    @property
-    def quantity(self):
-        return self._quantity
-    
-    @quantity.setter
-    def quantity(self, val):
-        if val<0:
-            print("Quantity cannot be negative")
-            return
-        self._quanitity = val
-    
-    @property
-    def price(self):
-        return self._price
-        
-    @price.setter
-    def price(self, val):
-        if val<0:
-            print('Product price cannot be negative')
-            return
-        self._price = val
+        self.name = name
+        self.description = description
+        self.quantity = quantity
+        self.price = price
+        self.first_added = InputTemplate.time()
+        self.last_updated = InputTemplate.time()
 
 
 class InputTemplate:
@@ -74,6 +30,17 @@ class InputTemplate:
         except:
             print(error)
             return False
+            
+    @staticmethod
+    def time():
+        from datetime import datetime, timedelta
+        IST_offset_hours = 5
+        IST_offset_minutes = 30
+        utc_time = datetime.utcnow()
+        ist_offset = timedelta(hours=IST_offset_hours, minutes=IST_offset_minutes)
+        ist_time = utc_time + ist_offset
+        return ist_time.strftime("%d-%m-%Y %H:%M")
+
         
 
 class Sale:
@@ -81,7 +48,7 @@ class Sale:
     def __init__(self, customer, total_cost=0, discount=0, bill_cost=0):
         Sale.sale_id += 1
         self.id = Sale.sale_id
-        self.date = datetime.now()
+        self.date = InputTemplate.time()
         self.customer = customer
         self.total_cost = total_cost
         self.discount = discount
@@ -94,22 +61,15 @@ class Sale:
         if not customer_id:return
         self.customer = new_customer
     
-    @property
-    def products(self):
-        return self.products
-    
-    @products.setter
-    def product(self, products_list):
-        self.products = products_list
         
     def print_bill(self):
-        print("------------Sale Details-----------")
-        print(f"Date: {self.date}                        Sale ID: {self.id}")
+        print("---------------------------Sale Details-------------------------")
+        print(f"Date: {self.date}                    Sale ID: {self.id}")
         print(f"_______________________________________________________________")
         print(f"  ID  |   Product Name  | Quantity | Cost |")
         print(f"_______________________________________________________________")
         for product in self.products:
-            print(f"{product.id.center(6)}|{product.product.name.center(17)}|{str(self.product.quantity).center(10)}|{str(self.cost).center(7)}")
+            print(f"{str(product.id).center(6)}|{product.product.name.center(17)}|{str(product.quantity).center(10)}|{str(product.cost).center(7)}")
             print(f"_______________________________________________________________")
         print(f"                                Total Cost: {self.total_cost}")
         print(f"                                Discount: {self.discount}")
@@ -117,13 +77,12 @@ class Sale:
         
 
 class SaleDetails:
-    def __init__(self, id, sale, product, quantity, price, shop):
-        self.id
+    def __init__(self, id, sale, product, quantity, cost):
+        self.id = id
         self.sale = sale
         self.product = product
         self.quantity = quantity
-        self.price = price
-        self.shop = shop
+        self.cost = cost
 
 
 class Customer:
@@ -133,7 +92,7 @@ class Customer:
         self.id = Customer.customer_id
         self.name = name
         self.phone = phone
-        self.first_added = datetime.now()
+        self.first_added = InputTemplate.time()
 
 class Shop:
     def __init__(self,name="Groove"):
@@ -233,21 +192,40 @@ class Shop:
             print("Added to cart")
             cart[product] = quantity
             choice = input("Wanted to add product? yes/no: ")
-            if choice.lower() != 'yes' or choice.lower()!='y':
+            if choice.lower() != 'yes' and choice.lower() != 'y':
                 break
         total_cost = 0
         
         new_sale = Sale(customer)
-        self.sale.append(new_sale)
-        for index,product,quantity  in enumerate(cart.items()):
+        self.sales[new_sale.id] = new_sale
+        index = 0
+        for product,quantity  in cart.items():
             price = quantity*product.price
             total_cost += price
             product.quantity = product.quantity-quantity
             new_sale.products.append(SaleDetails(index+1, new_sale, product, quantity,price))
+            index += 1
         new_sale.total_cost = total_cost
         new_sale.disocunt = 0
         new_sale.bill_cost = total_cost
         new_sale.print_bill()
+    
+    def print_bill_receipt(self):
+        bill_number = InputTemplate.get_int_input(f"Enter bill number: ")
+        if not bill_number:
+            return
+        if bill_number not in self.sales:
+            print(f"No sales found with ID {bill_number}")
+            return
+        self.sales[bill_number].print_bill()
+    
+    def sale_history(self):
+        if len(self.sales) == 0:
+            print("No sales history available")
+            return
+        for sale in self.sales:
+            print(f"Sale ID: {sale.id} - No of Products: {len(sale.products)} - Total: {sale.total_cost} - Discound: {sale.discount} - Billed Price: {sale.bill_cost}")
+        
 
 def display_options():
     print("""
@@ -279,7 +257,7 @@ def choose_option(shop):
         5:shop.remove_customer,
         6:shop.display_customer,
         7:shop.make_sale,
-        # 8:shop.print_bill,
+        8:shop.print_bill_receipt,
         # 9:shop.sale_history,
         # 10:shop.statistics
     }
@@ -298,6 +276,6 @@ def main():
             sys.exit()
         else:
             choice()
+        print()
 
 main()
-    
