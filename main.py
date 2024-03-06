@@ -5,16 +5,16 @@ class Product:
     def __init__(self,name, description ,quantity, price):
         self.product_id += 1
         self.id = self.product_id
-        self.name = name
-        self.description = description
-        self.quantity = quantity
-        self.price = price
+        self._name = name
+        self._description = description
+        self._quantity = quantity
+        self._price = price
         self.first_added = datetime.now()
         self.last_updated = datetime.now()
     
     @property
     def name(self):
-        return self.name
+        return self._name
     
     @name.setter
     def name(self,val):
@@ -25,35 +25,36 @@ class Product:
     
     @property
     def description(self):
-        return self.description
+        return self._description
     
     @description.setter
     def description(self, val):
         if len(val)<3:
             print("Description length too short")
             return
-        self.description = val
+        self._description = val
     
     @property
     def quantity(self):
-        return self.quantity
+        return self._quantity
     
     @quantity.setter
     def quantity(self, val):
         if val<0:
             print("Quantity cannot be negative")
             return
-        self.quanitity = val
+        self._quanitity = val
     
     @property
     def price(self):
-        return self.price
+        return self._price
+        
     @price.setter
     def price(self, val):
         if val<0:
             print('Product price cannot be negative')
             return
-        self.price = val
+        self._price = val
 
 
 class InputTemplate:
@@ -61,6 +62,14 @@ class InputTemplate:
     def get_int_input(text="Enter input", error="Enter correct input"):
         try:
             return int(input(text))
+        except:
+            print(error)
+            return False
+    
+    @staticmethod
+    def get_float_input(text="Enter float number: ", error="Oops! Enter correct input"):
+        try:
+            return float(input(text))
         except:
             print(error)
             return False
@@ -117,7 +126,10 @@ class SaleDetails:
 
 
 class Customer:
+    customer_id = 0
     def __init__(self, name, phone, first_added):
+        self.customer_id += 1
+        self.id = customer_id
         self.name = name
         self.phone = phone
         self.first_added = datetime.now()
@@ -129,13 +141,33 @@ class Shop:
         self.customers = dict()
         self.shop_name = shop_name
     
+    def add_customer(self):
+        name = input("Enter product name: ")
+        if len(name) < 3:
+            print("Customer name too short")
+        phone = InputTemplate.get_int_input("Enter customer phone number: ","Oops! Input must be a integer")
+        if not phone:
+            return
+        new_customer = Customer(name, phone)
+        self.customers[new_customer.id] = new_customer
+        print("New customer created")
+        
+    def remove_customer(self):
+        if self.len(customers)==0:
+            print("No customers available to remove")
+            return
+        for customer in self.customers:
+            print(f"ID: {customer.id} - Name: {customer.name} - Phone")
+        customer_id = InputTemplate.get_int_input("Enter customer ID: ","Oops! Input must be a integer")
+        
+        
     def add_product(self):
         name = input("Enter product name: ")
         description = input("Enter product description or leave it empty: ")
         quantity = InputTemplate.get_int_input("Enter product quantity","Oops! Input must be a integer")
         if not quantity:
             return
-        price = InputTemplate.get_int_input("Enter product price in decimal","Oops! Input must be a integer or decimal")
+        price = InputTemplate.get_float_input("Enter product price in decimal: ","Oops! Input must be a integer or decimal")
         if not price:
             return
         new_product = Product(name, description, quantity, price)
@@ -200,12 +232,3 @@ groove.add_product()
 groove.remove_product()
 groove.make_sale()
 print()
-            
-            
-
-
-        
-        
-    
-
-    
