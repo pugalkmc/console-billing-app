@@ -18,26 +18,19 @@ Welcome to my Object-Oriented Console-Based Shop Management System! This project
 - **Datetime Module**: Used for handling date and time operations.
 - **Sys Module**: Employed for interacting with the system, particularly for program termination.
 - **Math Module**: Utilized for mathematical calculations.
-- **React**: For building the user interface and managing state.
 
 ## Installation
 
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/shop-management-system.git
+    git clone https://github.com/pugalkmc/console-billing-app.git
     ```
 
 2. Navigate to the project directory:
 
     ```bash
-    cd shop-management-system
-    ```
-
-3. Install dependencies:
-
-    ```bash
-    pip install -r requirements.txt
+    cd console-billing-app
     ```
 
 ## Usage
