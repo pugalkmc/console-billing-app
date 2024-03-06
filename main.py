@@ -1,10 +1,11 @@
 from datetime import datetime
+import sys
 
 class Product:
     product_id = 0
     def __init__(self,name, description ,quantity, price):
-        self.product_id += 1
-        self.id = self.product_id
+        Product.product_id += 1
+        self.id = Product.product_id
         self._name = name
         self._description = description
         self._quantity = quantity
@@ -78,8 +79,8 @@ class InputTemplate:
 class Sale:
     sale_id = 0
     def __init__(self, customer, total_cost=0, discount=0, bill_cost=0):
-        self.sale_id += 1
-        self.id = self.sale_id
+        Sale.sale_id += 1
+        self.id = Sale.sale_id
         self.date = datetime.now()
         self.customer = customer
         self.total_cost = total_cost
@@ -127,22 +128,22 @@ class SaleDetails:
 
 class Customer:
     customer_id = 0
-    def __init__(self, name, phone, first_added):
-        self.customer_id += 1
-        self.id = customer_id
+    def __init__(self, name, phone):
+        Customer.customer_id += 1
+        self.id = Customer.customer_id
         self.name = name
         self.phone = phone
         self.first_added = datetime.now()
 
 class Shop:
-    def __init__(self, shop_name="Groove"):
+    def __init__(self,name="Groove"):
         self.products = dict()
         self.sales = dict()
         self.customers = dict()
-        self.shop_name = shop_name
+        self.name = name
     
     def add_customer(self):
-        name = input("Enter product name: ")
+        name = input("Enter customer name: ")
         if len(name) < 3:
             print("Customer name too short")
         phone = InputTemplate.get_int_input("Enter customer phone number: ","Oops! Input must be a integer")
@@ -152,19 +153,28 @@ class Shop:
         self.customers[new_customer.id] = new_customer
         print("New customer created")
         
+    def display_customer(self):
+        if len(self.customers)==0:
+            print("No customers available")
+            return False
+        print("\nCustomers List:")
+        for customer in self.customers.values():
+            print(f"ID: {customer.id} - Name: {customer.name} - Phone: {customer.phone}")    
+        return True
+        
     def remove_customer(self):
-        if self.len(customers)==0:
-            print("No customers available to remove")
+        if not self.display_customer():
             return
-        for customer in self.customers:
-            print(f"ID: {customer.id} - Name: {customer.name} - Phone")
         customer_id = InputTemplate.get_int_input("Enter customer ID: ","Oops! Input must be a integer")
+        if not customer_id:
+            return
+        del self.customers[customer_id]
         
         
     def add_product(self):
         name = input("Enter product name: ")
         description = input("Enter product description or leave it empty: ")
-        quantity = InputTemplate.get_int_input("Enter product quantity","Oops! Input must be a integer")
+        quantity = InputTemplate.get_int_input("Enter product quantity: ","Oops! Input must be a integer")
         if not quantity:
             return
         price = InputTemplate.get_float_input("Enter product price in decimal: ","Oops! Input must be a integer or decimal")
@@ -173,8 +183,19 @@ class Shop:
         new_product = Product(name, description, quantity, price)
         self.products[new_product.id] = new_product
         print("New product has been added!")
+        
+    def display_product(self):
+        if len(self.products)==0:
+            print("No products available!")
+            return False
+        
+        for product in self.products.values():
+            print(f"ID: {product.id} - Name: {product.name} - Quabtity: {product.quantity} - Price: {product.price}")
+        return True
     
     def remove_product(self):
+        if not self.display_product():
+            return
         product_id = InputTemplate.get_int_input("Enter product id to removed: ","Product id must be integer")
         if not product_id:
             return
@@ -192,25 +213,26 @@ class Shop:
             print("No customer available to make a sale, please add new customer")
             return
         
-        customer_id = InputTemplate.get_int_input("Enter customer ID")
+        customer_id = InputTemplate.get_int_input("Enter customer ID: ")
         if customer_id not in self.customers:
             print(f"No customer found with ID {customer_id}")
+            return
         customer = self.customers[customer_id]
         
         cart = dict()
         while True:
-            product_id = InputTemplate.get_int_input("Enter product ID")
+            product_id = InputTemplate.get_int_input("Enter product ID: ")
             if product_id not in self.products or self.products[product_id].quantity==0:
                 print(f"Product with ID {product_id} not found")
                 continue
             product = self.products[product_id]
-            quantity = InputTemplate.get_int_input(f"Enter quantity between 1 - {product.quantity}")
+            quantity = InputTemplate.get_int_input(f"Enter quantity between 1 - {product.quantity}: ")
             if quantity<0 or product.quantity<quantity:
                 print("Invalid quantity")
                 continue
             print("Added to cart")
             cart[product] = quantity
-            choice = InputTemplate.get_int_input("Wanted to add product? yes/no")
+            choice = input("Wanted to add product? yes/no: ")
             if choice.lower() != 'yes' or choice.lower()!='y':
                 break
         total_cost = 0
@@ -226,9 +248,56 @@ class Shop:
         new_sale.disocunt = 0
         new_sale.bill_cost = total_cost
         new_sale.print_bill()
+
+def display_options():
+    print("""
+    1) Add product
+    2) Remove product
+    3) Display products
+    4) Add customer
+    5) delete Customer
+    6) Display Customer
+    7) Make Sale
+    8) Print Bill
+    9) Sales History
+    10) Statistics
+    """)
+
+def choose_option(shop):
+    try:
+        choice = int(input("Enter your choice: "))
+    except:
+        print("Invalid input")
+        choice = False
+        return
     
-groove = Shop()
-groove.add_product()
-groove.remove_product()
-groove.make_sale()
-print()
+    choices = {
+        1:shop.add_product,
+        2:shop.remove_product,
+        3:shop.display_product,
+        4:shop.add_customer,
+        5:shop.remove_customer,
+        6:shop.display_customer,
+        7:shop.make_sale,
+        # 8:shop.print_bill,
+        # 9:shop.sale_history,
+        # 10:shop.statistics
+    }
+    
+    return choices.get(choice, False)
+    
+
+def main():
+    shop = Shop()
+    print(f"Welcome to {shop.name}\n")
+    print("There will be no more customer and products available\nAdd some data and using the below options\n")
+    while True:
+        choice = choose_option(shop)
+        if not choice:
+            print("Stopping program")
+            sys.exit()
+        else:
+            choice()
+
+main()
+    
