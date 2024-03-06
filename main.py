@@ -1,5 +1,6 @@
-from datetime import datetime
+import datetime
 import sys
+import math
 
 class Product:
     product_id = 0
@@ -33,11 +34,10 @@ class InputTemplate:
             
     @staticmethod
     def time():
-        from datetime import datetime, timedelta
         IST_offset_hours = 5
         IST_offset_minutes = 30
-        utc_time = datetime.utcnow()
-        ist_offset = timedelta(hours=IST_offset_hours, minutes=IST_offset_minutes)
+        utc_time = datetime.datetime.now(datetime.UTC)
+        ist_offset = datetime.timedelta(hours=IST_offset_hours, minutes=IST_offset_minutes)
         ist_time = utc_time + ist_offset
         return ist_time.strftime("%d-%m-%Y %H:%M")
 
@@ -63,17 +63,17 @@ class Sale:
     
         
     def print_bill(self):
-        print("---------------------------Sale Details-------------------------")
-        print(f"Date: {self.date}                    Sale ID: {self.id}")
-        print(f"_______________________________________________________________")
+        print("-----------------Sale Details---------------")
+        print(f"Date: {self.date}           Sale ID: {self.id}")
+        print(f"___________________________________________")
         print(f"  ID  |   Product Name  | Quantity | Cost |")
-        print(f"_______________________________________________________________")
+        print(f"___________________________________________")
         for product in self.products:
             print(f"{str(product.id).center(6)}|{product.product.name.center(17)}|{str(product.quantity).center(10)}|{str(product.cost).center(7)}")
-            print(f"_______________________________________________________________")
-        print(f"                                Total Cost: {self.total_cost}")
-        print(f"                                Discount: {self.discount}")
-        print(f"                                Bill Cost: {self.bill_cost}")
+            print(f"________________________________________")
+        print(f"                         Total Cost: {self.total_cost}")
+        print(f"                         Discount: {self.discount}")
+        print(f"                         Bill Cost: {self.bill_cost}")
         
 
 class SaleDetails:
@@ -124,9 +124,11 @@ class Shop:
     def remove_customer(self):
         if not self.display_customer():
             return
-        customer_id = InputTemplate.get_int_input("Enter customer ID: ","Oops! Input must be a integer")
-        if not customer_id:
+        customer_id = InputTemplate.get_int_input("Enter customer ID to remove: ","Oops! Input must be a integer")
+        if not customer_id or customer_id not in self.customers:
+            print(f"Customer with ID {customer_id} not found")
             return
+        print("Customer data removed")
         del self.customers[customer_id]
         
         
@@ -177,10 +179,12 @@ class Shop:
             print(f"No customer found with ID {customer_id}")
             return
         customer = self.customers[customer_id]
-        
         cart = dict()
         while True:
             product_id = InputTemplate.get_int_input("Enter product ID: ")
+            if product_id==-1:
+                print("Sale aborted!")
+                return
             if product_id not in self.products or self.products[product_id].quantity==0:
                 print(f"Product with ID {product_id} not found")
                 continue
@@ -206,8 +210,9 @@ class Shop:
             new_sale.products.append(SaleDetails(index+1, new_sale, product, quantity,price))
             index += 1
         new_sale.total_cost = total_cost
-        new_sale.disocunt = 0
-        new_sale.bill_cost = total_cost
+        get_discount = (total_cost*self.discount_calculator(customer))//100
+        new_sale.discount = get_discount
+        new_sale.bill_cost = total_cost-get_discount
         new_sale.print_bill()
     
     def print_bill_receipt(self):
@@ -223,8 +228,24 @@ class Shop:
         if len(self.sales) == 0:
             print("No sales history available")
             return
-        for sale in self.sales:
+        for sale in self.sales.values():
             print(f"Sale ID: {sale.id} - No of Products: {len(sale.products)} - Total: {sale.total_cost} - Discound: {sale.discount} - Billed Price: {sale.bill_cost}")
+        
+    def discount_calculator(self,customer):
+        total_purchase = 0
+        no_of_purchase = 0
+        discount = 0
+        for sale in self.sales.values():
+            if sale.customer == customer:
+                total_purchase += sale.bill_cost
+                no_of_purchase += 1
+        discount = (total_purchase/1000)
+        discount += (no_of_purchase/10)
+        return math.ceil(min(discount, 15))
+    
+
+
+
         
 
 def display_options():
@@ -238,7 +259,6 @@ def display_options():
     7) Make Sale
     8) Print Bill
     9) Sales History
-    10) Statistics
     """)
 
 def choose_option(shop):
@@ -258,8 +278,7 @@ def choose_option(shop):
         6:shop.display_customer,
         7:shop.make_sale,
         8:shop.print_bill_receipt,
-        # 9:shop.sale_history,
-        # 10:shop.statistics
+        9:shop.sale_history
     }
     
     return choices.get(choice, False)
@@ -278,4 +297,5 @@ def main():
             choice()
         print()
 
-main()
+if __name__ == '__main__':
+    main()
